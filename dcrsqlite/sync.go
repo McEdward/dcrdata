@@ -16,7 +16,7 @@ import (
 const (
 	rescanLogBlockChunk = 250
 	// dbType is the database backend type to use
-	dbType = "ffldb"
+	// dbType = "ffldb" // currently unused
 	// DefaultStakeDbName is the default database name
 	DefaultStakeDbName = "ffldb_stake"
 )
@@ -92,6 +92,16 @@ func (db *wiredDB) resyncDB(quit chan struct{}) error {
 			},
 		}
 
+		freeCache := int64(db.APICache.Capacity()) - db.APICache.Utilization()
+		remainingBlocks := i - height
+		if db.APICache != nil && remainingBlocks <= freeCache {
+			if err = db.APICache.StoreBlockSummary(&blockSummary); err != nil {
+				log.Warn("Unable to store block summary in cache:", err)
+			} else if (i-1)%rescanLogBlockChunk == 0 || i == startHeight {
+				log.Debugf("Stored block in cache: %d / %v. Utilization: %v%%",
+					blockSummary.Height, blockSummary.Hash, db.APICache.Utilization())
+			}
+		}
 		if err = db.StoreBlockSummary(&blockSummary); err != nil {
 			return fmt.Errorf("Unable to store block summary in database: %v", err)
 		}
@@ -102,7 +112,7 @@ func (db *wiredDB) resyncDB(quit chan struct{}) error {
 		// Ticket fee info
 		fib := txhelpers.FeeRateInfoBlock(block, db.client)
 		if fib == nil {
-			return fmt.Errorf("FeeRateInfoBlock failed.")
+			return fmt.Errorf("FeeRateInfoBlock failed")
 		}
 		si.Feeinfo = *fib
 
@@ -269,11 +279,14 @@ func (db *wiredDB) resyncDBWithPoolValue(quit chan struct{}) error {
 			PoolInfo:   tpi,
 		}
 
-		// TODO: Why was there a discrepancy using a ticket cache in this function?
-		// if blockSummary.PoolInfo != tpi {
-		// 	fmt.Println(blockSummary.PoolInfo)
-		// 	fmt.Println(tpi)
-		// }
+		if db.APICache != nil {
+			if err = db.APICache.StoreBlockSummary(&blockSummary); err != nil {
+				log.Warn("Unable to store block summary in cache:", err)
+			} else if (i-1)%rescanLogBlockChunk == 0 || i == startHeight {
+				log.Debugf("Stored block in cache: %d / %v. Utilization: %v%%",
+					blockSummary.Height, blockSummary.Hash, db.APICache.Utilization())
+			}
+		}
 
 		if i > bestBlockHeight {
 			if err = db.StoreBlockSummary(&blockSummary); err != nil {
@@ -295,7 +308,7 @@ func (db *wiredDB) resyncDBWithPoolValue(quit chan struct{}) error {
 		// Ticket fee info
 		fib := txhelpers.FeeRateInfoBlock(block, db.client)
 		if fib == nil {
-			return fmt.Errorf("FeeRateInfoBlock failed.")
+			return fmt.Errorf("FeeRateInfoBlock failed")
 		}
 		si.Feeinfo = *fib
 
