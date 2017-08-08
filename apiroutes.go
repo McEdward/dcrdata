@@ -331,12 +331,35 @@ func (c *appContext) getBlockTransactions(w http.ResponseWriter, r *http.Request
 
 	blockTransactions := c.BlockData.GetTransactionsForBlockByHash(hash)
 	if blockTransactions == nil {
-		apiLog.Errorf("Unable to get block %s summary", hash)
+		apiLog.Errorf("Unable to get block %s transactions", hash)
 		http.Error(w, http.StatusText(422), 422)
 		return
 	}
 
 	writeJSON(w, blockTransactions, c.getIndentQuery(r))
+}
+
+func (c *appContext) getBlockTransactionsCount(w http.ResponseWriter, r *http.Request) {
+	hash := c.getBlockHashCtx(r)
+	if hash == "" {
+		http.Error(w, http.StatusText(422), 422)
+	}
+
+	blockTransactions := c.BlockData.GetTransactionsForBlockByHash(hash)
+	if blockTransactions == nil {
+		apiLog.Errorf("Unable to get block %s transactions", hash)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	encoder := json.NewEncoder(w)
+	indent := c.getIndentQuery(r)
+	prefix, newline := indent, ""
+	encoder.SetIndent(prefix, indent)
+	if indent != "" {
+		newline = "\n"
+	}
+	fmt.Fprintf(w, "[%s%stx:%d,", newline, prefix, len(blockTransactions.Tx))
+	fmt.Fprintf(w, "%s%sstx:%d%s", newline, prefix, len(blockTransactions.STx), newline)
+	fmt.Fprintf(w, "]")
 }
 
 func (c *appContext) getBlockHeader(w http.ResponseWriter, r *http.Request) {
