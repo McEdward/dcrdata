@@ -343,11 +343,13 @@ func (c *appContext) getBlockTransactionsCount(w http.ResponseWriter, r *http.Re
 	hash := c.getBlockHashCtx(r)
 	if hash == "" {
 		http.Error(w, http.StatusText(422), 422)
+		return
 	}
 
 	blockTransactions := c.BlockData.GetTransactionsForBlockByHash(hash)
 	if blockTransactions == nil {
 		apiLog.Errorf("Unable to get block %s transactions", hash)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	encoder := json.NewEncoder(w)
