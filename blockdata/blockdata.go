@@ -181,7 +181,6 @@ func (t *Collector) Collect() (*BlockData, error) {
 	go func() {
 		bestBlockHash, err := t.dcrdChainSvr.GetBestBlockHash()
 		toch <- bbhRes{err, bestBlockHash}
-		return
 	}()
 
 	var bbs bbhRes

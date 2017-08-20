@@ -12,8 +12,6 @@ install:
   - go get -v github.com/alecthomas/gometalinter
   - gometalinter --install
   - go get -v $gotools/cmd/cover
-  - go get -v github.com/bradfitz/goimports
-  - go get -v github.com/golang/lint/golint
 script:
   - export PATH=$PATH:$GOPATH/bin
   - ./goclean.sh

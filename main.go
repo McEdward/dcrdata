@@ -137,7 +137,6 @@ func mainCore() int {
 		// Close the channel so multiple goroutines can get the message
 		log.Infof("CTRL+C hit.  Closing goroutines.")
 		close(quit)
-		return
 	}()
 
 	// Resync db
