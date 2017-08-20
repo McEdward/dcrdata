@@ -175,7 +175,10 @@ func getNodeNtfnHandlers(cfg *config) *dcrrpcclient.NotificationHandlers {
 		OnTxAccepted: func(hash *chainhash.Hash, amount dcrutil.Amount) {
 			// Just send the tx hash and let the goroutine handle everything.
 			select {
-			case ntfnChans.newTxChan <- &mempool.NewTx{hash, time.Now()}:
+			case ntfnChans.newTxChan <- &mempool.NewTx{
+				Hash: hash,
+				T:    time.Now(),
+			}:
 			default:
 				log.Warn("newTxChan buffer full!")
 			}
