@@ -8,7 +8,9 @@ before_install:
 install:
   - go get -u github.com/golang/dep/cmd/dep
   - dep ensure -v
-  - go install . ./cmd/...
+  - go install -v . ./cmd/...
+  - go get -v github.com/alecthomas/gometalinter
+  - gometalinter --install
   - go get -v $gotools/cmd/cover
   - go get -v github.com/bradfitz/goimports
   - go get -v github.com/golang/lint/golint
